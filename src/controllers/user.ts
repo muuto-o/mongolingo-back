@@ -164,3 +164,12 @@ export const getMe = async (req:Request, res:any) =>{
     res.status(500).json({ message: "Server error", error });
   }
 }
+
+export const leaderboard = async (req : Request, res : any) =>{
+  try {
+    const users = await User.find().sort({points : -1});
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+}

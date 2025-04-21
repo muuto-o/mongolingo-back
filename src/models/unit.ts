@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 
 const UnitSchema = new mongoose.Schema({
     name : {type : String, required : true},
+    unitLevel : {type : Number}
     // name : {type : String, required : true},
 },{toJSON: {
       transform: function (doc, ret) {
@@ -20,5 +21,13 @@ const UnitSchema = new mongoose.Schema({
       },
     },
 })
+
+UnitSchema.pre("save", async function (next) {
+  if (!this.unitLevel) {
+    const count = await mongoose.model("Unit").countDocuments();
+    this.unitLevel = (count + 1);
+  }
+  next();
+});
 
 export default mongoose.model("Unit", UnitSchema);

@@ -1,9 +1,10 @@
 import express from "express";
-import { completeExercise, deleteUser, editProfile, editUser, getAllUsers, getMe, getUser, loginUser, registerUser } from "../controllers/user";
+import { completeExercise, deleteUser, editProfile, editUser, getAllUsers, getMe, getUser, leaderboard, loginUser, registerUser } from "../controllers/user";
 
 const router = express.Router();
 
 router.get("/", getAllUsers);
+router.get("/leaderboard", leaderboard);
 router.get("/:id", getUser);
 router.get("/me/:id", getMe);
 router.post("/", registerUser);

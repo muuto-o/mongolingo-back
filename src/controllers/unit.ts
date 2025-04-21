@@ -7,7 +7,7 @@ const router = Router();
 
 
 export const getUnitsWithExercises = async (req: Request, res: Response) => {
-  try {
+ try {
     const userExerciseLevel = parseInt(req.query.exerciseLevel as string) || 1;
 
     const units = await UnitModel.aggregate([
@@ -39,7 +39,7 @@ export const getUnitsWithExercises = async (req: Request, res: Response) => {
       {
         $lookup: {
           from: 'questions',
-          localField: 'exercises.id', // Lookup questions based on exercise ID
+          localField: 'exercises.id',
           foreignField: 'exerciseId',
           as: 'exercises.questions',
         },
@@ -51,7 +51,7 @@ export const getUnitsWithExercises = async (req: Request, res: Response) => {
               if: {
                 $and: [
                   { $lte: ['$exercises.level', userExerciseLevel] },
-                  { $gt: [{ $size: '$exercises.questions' }, 0] }, // Check if there are questions
+                  { $gt: [{ $size: '$exercises.questions' }, 0] },
                 ],
               },
               then: true,
@@ -64,6 +64,7 @@ export const getUnitsWithExercises = async (req: Request, res: Response) => {
         $project: {
           _id: 1,
           name: 1,
+          unitLevel: 1,
           'exercises.iconPath': 1,
           'exercises.level': 1,
           'exercises.id': 1,
@@ -74,6 +75,7 @@ export const getUnitsWithExercises = async (req: Request, res: Response) => {
         $group: {
           _id: '$_id',
           name: { $first: '$name' },
+          unitLevel: { $first: '$unitLevel' },
           exercises: { $push: '$exercises' },
         },
       },
@@ -83,9 +85,15 @@ export const getUnitsWithExercises = async (req: Request, res: Response) => {
         },
       },
       {
+        $sort: {
+          unitLevel: 1,
+        },
+      },
+      {
         $project: {
           _id: 0,
           name: 1,
+          unitLevel: 1,
           exercises: 1,
         },
       },
