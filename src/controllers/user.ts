@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/user";
 import Exercise from "../models/exercise";
+import { calculateUserStreak } from "@/services/streak-utils";
 
 interface Params {
   id: string;
@@ -173,3 +174,15 @@ export const leaderboard = async (req : Request, res : any) =>{
     res.status(500).json(error);
   }
 }
+
+export const userStreak =  async (req : Request, res : any) => {
+  const { userId } = req.params;
+
+  try {
+    const streak = await calculateUserStreak(userId);
+    res.json({ streak });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to calculate streak" });
+  }
+};
