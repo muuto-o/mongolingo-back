@@ -7,6 +7,23 @@ const UserProgressSchema = new mongoose.Schema({
     completed : {type : Boolean, default : false},
     score : {type : Number, default : 0},
     completedAt : {type : Date, default : Date.now}
+},{
+    toJSON: {
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v; // Remove __v if you don't need it
+        return ret;
+      },
+    },
+    toObject: {
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v; // Remove __v if you don't need it
+        return ret;
+      },
+    },
 })
 
 export default mongoose.model("UserProgress", UserProgressSchema);

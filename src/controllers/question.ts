@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { QuestionModel, MultipleChoice, Matching } from '../models/question'; // Adjust paths as needed
+import Exercise from "@/models/exercise"
+
 
 
 export const getQuestionsByExerciseId = async (req: Request, res: Response) => {
@@ -14,6 +16,29 @@ export const getQuestionsByExerciseId = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch questions', error: error });
   }
 };
+
+
+export const getQuestionByExcerciseLevel = async (req: Request, res : any) =>{
+   try {
+   const id = req.params.id; // Get exerciseId from request params
+
+    const exercise = await Exercise.findOne({level: id})
+
+    if(!exercise){
+      return res.status(404).json("Exercise not found");
+    }
+
+    const questions = await QuestionModel.find({ exerciseId: exercise.id });
+
+    res.json({
+      length : questions.length,
+      questions
+    });
+    } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ message: 'Failed to fetch questions', error: error });
+  }
+}
 
 
 // Create a new question (general)
