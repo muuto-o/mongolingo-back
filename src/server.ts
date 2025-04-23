@@ -7,6 +7,7 @@ import userRoutes from "./routes/user";
 import unitRoutes from "./routes/unit";
 import exerciseRoutes from "./routes/exercise";
 import questionRoutes from "./routes/question";
+import achievementRoutes from "@/routes/achievement";
 import connectDB from "./config/db";
 // import lessonRoutes from "./routes/lessonRoutes";
 
@@ -22,6 +23,7 @@ async function start(){
   // app.use(express.json());
 
   app.use("/api/users", userRoutes);
+  app.use("/api/achievements", achievementRoutes);
   app.use("/api/units", unitRoutes);
   app.use("/api/exercises", exerciseRoutes );
   app.use("/api/questions", questionRoutes );

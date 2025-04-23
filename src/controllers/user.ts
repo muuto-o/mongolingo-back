@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import User from "../models/user";
 import Exercise from "../models/exercise";
+import UserProgress from "@/models/user-progress";
+import UserAchievement from "@/models/user-achievement"
 import { calculateUserStreak } from "@/services/streak-utils";
+import { addExperience } from "@/services/achievement-utils";
+import { checkAchievements } from "@/services/check-achivements";
 
 interface Params {
   id: string;
@@ -131,6 +135,16 @@ export const completeExercise = async (req: Request, res: any) => {
     if (!exercise) {
       return res.status(404).json({ message: 'Exericse not found' }); // User not found, return 404
     }
+
+     await UserProgress.findOneAndUpdate(
+      { userId: user._id, exerciseId },
+      { completed: true, completedAt: new Date() },
+      { upsert: true }
+    );
+
+
+    //  const {experience : xp, level, leveledUp, points : pts } = await addExperience(email, experience  || 20, points);
+     const unlockedAchievements = await checkAchievements(user.id)
     // Add points and experience to the existing values
     user.points = (typeof user.points === 'number' ? user.points : 0) + (points || 0);
     user.experience = (typeof user.experience === 'number' ? user.experience : 0) + (experience || 0);
@@ -140,7 +154,10 @@ export const completeExercise = async (req: Request, res: any) => {
     // Save the updated user
     const updatedUser = await user.save();
 
-    res.json(updatedUser);
+    res.json({message : "Амжиллттай.", 
+      updatedUser,
+      unlockedAchievements
+    });
   } catch (error) {
     console.error('Error adding points:', error);
     res.status(500).json({ message: 'Server error has occurred' }); // Server error, return 500
@@ -153,12 +170,29 @@ export const getMe = async (req:Request, res:any) =>{
     const userData = await User.findById(req.params.id);
     
     if (!userData) return res.status(404).json({ message: "User not found" });
+
+    const userAchievements = await UserAchievement.find({ userId: userData.id })
+      .populate("achievementId", "name iconPath") // Populate achievement details
+      .lean();
+
+    // 🎯 2. Map achievements to clean structure
+   const achievements = userAchievements.map((ua) => {
+  const achievement = ua.achievementId as unknown as { name: string; iconPath: string };
+  return {
+    name: achievement.name,
+    iconPath: achievement.iconPath,
+    acquiredAt: ua.acquiredAt,
+  };
+});
+
+
     const user = {
       id : userData._id,
       email : userData.email,
       username : userData.username,
       points : userData.points,
-      experience : userData.experience
+      experience : userData.experience,
+      achievements
      }
     res.status(200).json(user);
   } catch (error) {

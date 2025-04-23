@@ -7,6 +7,18 @@ type AnswerType = {
   isCorrect : Boolean | undefined;
 }
 
+export interface UserDocument extends Document{
+  username : string;
+  email: string;
+  points: number;
+  password : string;
+  experience: number;
+  accuracy: number;
+  exerciseLevel: number;
+  createdAt : Date;
+  updatedAt : Date;
+}
+
 const answerSchema = new mongoose.Schema<AnswerType>({
   type : {type : mongoose.Schema.Types.ObjectId, ref : "Type"},
   count : {type : Number, default : 0},
@@ -40,4 +52,4 @@ const userSchema = new mongoose.Schema({
     },
 });
  
-export default mongoose.model("User", userSchema);
+export default mongoose.model<UserDocument>("User", userSchema);
