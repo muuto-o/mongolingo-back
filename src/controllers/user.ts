@@ -6,6 +6,7 @@ import UserAchievement from "@/models/user-achievement"
 import { calculateUserStreak } from "@/services/streak-utils";
 import { addExperience } from "@/services/achievement-utils";
 import { checkAchievements } from "@/services/check-achivements";
+import { getExerciseCompletionReport } from "@/services/exercise-service";
 
 interface Params {
   id: string;
@@ -175,15 +176,19 @@ export const getMe = async (req:Request, res:any) =>{
       .populate("achievementId", "name iconPath") // Populate achievement details
       .lean();
 
+    const report = await getExerciseCompletionReport(userData.id);
+
     // 🎯 2. Map achievements to clean structure
    const achievements = userAchievements.map((ua) => {
-  const achievement = ua.achievementId as unknown as { name: string; iconPath: string };
-  return {
-    name: achievement.name,
-    iconPath: achievement.iconPath,
-    acquiredAt: ua.acquiredAt,
-  };
-});
+      const achievement = ua.achievementId as unknown as { name: string; iconPath: string };
+      return {
+        name: achievement.name,
+        iconPath: achievement.iconPath,
+        acquiredAt: ua.acquiredAt,
+      };
+    });
+
+
 
 
     const user = {
@@ -192,7 +197,8 @@ export const getMe = async (req:Request, res:any) =>{
       username : userData.username,
       points : userData.points,
       experience : userData.experience,
-      achievements
+      achievements,
+      report,
      }
     res.status(200).json(user);
   } catch (error) {
