@@ -7,6 +7,8 @@ import { calculateUserStreak } from "@/services/streak-utils";
 import { addExperience } from "@/services/achievement-utils";
 import { checkAchievements } from "@/services/check-achivements";
 import { getExerciseCompletionReport } from "@/services/exercise-service";
+import {getYearlyActivity} from "@/services/streak-utils"
+
 
 interface Params {
   id: string;
@@ -164,6 +166,18 @@ export const completeExercise = async (req: Request, res: any) => {
     res.status(500).json({ message: 'Server error has occurred' }); // Server error, return 500
   }
 };
+
+export const getActivity = async (req : Request, res : any) => {
+  const { userId } = req.params;
+
+  try {
+    const activity = await getYearlyActivity(userId);
+    res.json(activity);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch activity" });
+  }
+}
 
 export const getMe = async (req:Request, res:any) =>{
   try {
