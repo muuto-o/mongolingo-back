@@ -90,7 +90,10 @@ export const registerUser = async (req:Request, res:any) => {
       await user.save();
       res.status(201).json({ message: "Амжилттaй бүртгэлээ." });
   } catch (error) {
-    res.status(400).json(error);
+    res.status(500).json({
+      message: 'Server error',
+      error,
+    });
   }
 }
 
@@ -125,58 +128,66 @@ export const loginUser = async (req:Request, res:any) => {
 }
 
 export const forgotPassword = async (req : Request, res : any) =>{
-  if(!req.body.email){
-    return res.status(400).json({
-      message : "Нууц үг сэргээх имэйл оруулна уу"
+  try {
+    if(!req.body.email){
+      return res.status(400).json({
+        message : "Нууц үг сэргээх имэйл оруулна уу"
+      })
+    }
+  
+    const user = await User.findOne({email : req.body.email});
+  
+    if(!user) {
+      return res.status(400).json({
+        message : "Хэрэглэгч олдсонгүй."
+      })
+    }
+  
+    const resetToken = user.generateResetPasswordToken();
+    await user.save();
+  
+    const link = `http://localhost:5173/reset-password?token=${resetToken}`
+  
+    await sendEmail({
+      email: user.email,
+      subject : "Нууц үг өөрчлөх хүсэлт",
+      message : `Сайн байна уу.<br><br>Та нууц үгээ дараах линк дээр даран өөрчилнө үү: <a href="${link}" target="_blank">${link}</a><br><br>Өдрийг сайхан өнгөрүүлээрэй.`
+    });
+  
+    return res.status(200).json({
+      resetToken,
     })
+  } catch (error) {
+    return res.status(500).json({message : "Серверийн алдаа." });
   }
-
-  const user = await User.findOne({email : req.body.email});
-
-  if(!user) {
-    return res.status(400).json({
-      message : "Хэрэглэгч олдсонгүй."
-    })
-  }
-
-  const resetToken = user.generateResetPasswordToken();
-  await user.save();
-
-  const link = `http://localhost:5173/reset-password?token=${resetToken}`
-
-  await sendEmail({
-    email: user.email,
-    subject : "Нууц үг өөрчлөх хүсэлт",
-    message : `Сайн байна уу.<br><br>Та нууц үгээ дараах линк дээр даран өөрчилнө үү: <a href="${link}" target="_blank">${link}</a><br><br>Өдрийг сайхан өнгөрүүлээрэй.`
-  });
-
-  return res.status(200).json({
-    resetToken,
-  })
 }
 
 export const resetPassword = async (req : Request, res : any) =>{
-  if(!req.body.resetToken || !req.body.password){
-    return res.status(400).json({
-      message : "Токен болон нууц үгээ дамжуулна уу."
-    })
+  try {
+    if(!req.body.resetToken || !req.body.password){
+      return res.status(400).json({
+        message : "Токен болон нууц үгээ дамжуулна уу."
+      })
+    }
+  
+    const encryptedPassword = crypto.createHash("sha256").update(req.body.resetToken).digest("hex");
+    const user = await User.findOne({resetPasswordToken : encryptedPassword, resetPasswordExpire : {$gt: Date.now()}});
+  
+    if(!user) {
+      return res.status(400).json({
+        message : "Хүчингүй токен."
+      })
+    }
+  
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    user.save();
+  
+    res.status(201).json({ message: "Амжилттaй шинэчлэгдлээ." });
+  } catch (error) {
+    return res.status(500).json({message : "Серверийн алдаа." });
   }
-
-  const encryptedPassword = crypto.createHash("sha256").update(req.body.resetToken).digest("hex");
-  const user = await User.findOne({resetPasswordToken : encryptedPassword, resetPasswordExpire : {$gt: Date.now()}});
-
-  if(!user) {
-    return res.status(400).json({
-      message : "Хүчингүй токен."
-    })
-  }
-
-  user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
-  user.save();
-
-  res.status(201).json({ message: "Амжилттaй шинэчлэгдлээ." });
 }
 
 
@@ -218,7 +229,6 @@ export const completeExercise = async (req: Request, res: any) => {
       unlockedAchievements
     });
   } catch (error) {
-    console.error('Error adding points:', error);
     res.status(500).json({ message: 'Server error has occurred' }); // Server error, return 500
   }
 };
