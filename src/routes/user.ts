@@ -1,5 +1,5 @@
 import express from "express";
-import { completeExercise, deleteUser, editProfile, editUser, forgotPassword, getActivity, getAllUsers, getMe, getUser, leaderboard, loginUser, registerUser, resetPassword, userStreak } from "../controllers/user";
+import { completeExercise, deleteUser, editProfile, editUser, forgotPassword, getActivity, getAllUsers, getMe, getUser, leaderboard, loginUser, registerUser, resetPassword, userStreak } from "@/controllers/user";
 
 const router = express.Router();
 

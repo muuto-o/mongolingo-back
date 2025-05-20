@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import User from "../models/user";
-import Exercise from "../models/exercise";
+import User from "@/models/user";
+import Exercise from "@/models/exercise";
 import UserProgress from "@/models/user-progress";
 import UserAchievement from "@/models/user-achievement"
 import { calculateUserStreak } from "@/services/streak-utils";
-import { addExperience } from "@/services/achievement-utils";
 import { checkAchievements } from "@/services/check-achivements";
 import { getExerciseCompletionReport } from "@/services/exercise-service";
 import {getYearlyActivity} from "@/services/streak-utils"

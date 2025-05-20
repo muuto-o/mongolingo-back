@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "node dist/server.js",
+    "start": "node -r module-alias/register dist/server.js",
     "build": "tsc",
     "dev": "nodemon --ext ts --exec ts-node -r tsconfig-paths/register src/server.ts"
   },
