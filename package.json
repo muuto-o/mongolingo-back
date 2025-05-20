@@ -8,6 +8,15 @@
     "build": "tsc",
     "dev": "nodemon --ext ts --exec ts-node -r tsconfig-paths/register src/server.ts"
   },
+  "_moduleAliases": {
+    "@/controllers": "dist/controllers",
+    "@/models": "dist/models",
+    "@/routes": "dist/routes",
+    "@/hooks": "dist/hooks",
+    "@/services": "dist/services",
+    "@/utils": "dist/utils",
+    "@/constants": "dist/constants"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,6 +29,7 @@
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "mongoose": "^8.12.1",
     "nodemailer": "^7.0.3",
     "tsconfig-paths": "^4.2.0"
