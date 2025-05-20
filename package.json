@@ -15,6 +15,7 @@
     "@/hooks": "dist/hooks",
     "@/services": "dist/services",
     "@/utils": "dist/utils",
+    "@/middleware": "dist/middleware",
     "@/constants": "dist/constants"
   },
   "keywords": [],
