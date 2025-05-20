@@ -7,7 +7,7 @@ import {
   updateAchievement,
   deleteAchievement,
 } from "@/controllers/achievement";
-import { authenticateToken } from "src/middleware/protect";
+import { authenticateToken } from "@/middleware/protect";
 
 const router = Router();
 
