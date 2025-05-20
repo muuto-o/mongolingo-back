@@ -142,7 +142,7 @@ export const forgotPassword = async (req : Request, res : any) =>{
   const resetToken = user.generateResetPasswordToken();
   await user.save();
 
-  const link = `http://localhost:5173/reset-password?${resetToken}`
+  const link = `http://localhost:5173/reset-password?token=${resetToken}`
 
   await sendEmail({
     email: user.email,
@@ -151,7 +151,7 @@ export const forgotPassword = async (req : Request, res : any) =>{
   });
 
   return res.status(200).json({
-    token : resetToken,
+    resetToken,
   })
 }
 
