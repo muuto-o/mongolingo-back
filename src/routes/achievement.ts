@@ -7,11 +7,12 @@ import {
   updateAchievement,
   deleteAchievement,
 } from "@/controllers/achievement";
+import { authenticateToken } from "src/middleware/protect";
 
 const router = Router();
 
 router.post("/", createAchievement); // Create
-router.get("/", getAchievements); // Read all
+router.get("/",authenticateToken ,getAchievements); // Read all
 router.get("/:id", getAchievementById); // Read one
 router.put("/:id", updateAchievement); // Update
 router.delete("/:id", deleteAchievement); // Delete

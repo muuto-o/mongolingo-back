@@ -1,5 +1,5 @@
 import express from "express";
-import { completeExercise, deleteUser, editProfile, editUser, getActivity, getAllUsers, getMe, getUser, leaderboard, loginUser, registerUser, userStreak } from "../controllers/user";
+import { completeExercise, deleteUser, editProfile, editUser, forgotPassword, getActivity, getAllUsers, getMe, getUser, leaderboard, loginUser, registerUser, resetPassword, userStreak } from "../controllers/user";
 
 const router = express.Router();
 
@@ -16,6 +16,8 @@ router.put("/:id", editUser);
 router.delete("/:id", deleteUser);
 
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 router.get("/:userId/activity", getActivity);
 

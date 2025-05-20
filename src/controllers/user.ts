@@ -8,6 +8,8 @@ import { addExperience } from "@/services/achievement-utils";
 import { checkAchievements } from "@/services/check-achivements";
 import { getExerciseCompletionReport } from "@/services/exercise-service";
 import {getYearlyActivity} from "@/services/streak-utils"
+import { sendEmail } from "@/services/email";
+import crypto from "crypto";
 
 
 interface Params {
@@ -68,28 +70,28 @@ export const deleteUser = async (req: Request, res: any) => {
 
 
 export const registerUser = async (req:Request, res:any) => {
-    try {
-  const { username, email, password } = req.body;
+  try {
+      const { username, email, password } = req.body;
 
-  // Check if a user with the same username or email already exists
-  const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+      // Check if a user with the same username or email already exists
+      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
 
-  if (existingUser) {
-    return res.status(409).json({ message: "Username or email already exists." }); //409 conflict
+      if (existingUser) {
+        return res.status(409).json({ message: "Бүртгэлтэй хэрэглэгч байна." });
+      }
+
+      const newUser = {
+        username,
+        email,
+        password,
+      };
+
+      const user = new User(newUser);
+      await user.save();
+      res.status(201).json({ message: "Амжилттaй бүртгэлээ." });
+  } catch (error) {
+    res.status(400).json(error);
   }
-
-  const newUser = {
-    username,
-    email,
-    password,
-  };
-
-  const user = new User(newUser);
-  await user.save();
-  res.status(201).json({ message: "Амжилттaй бүртгэлээ." });
-} catch (error) {
-  res.status(400).json(error);
-}
 }
 
 export const loginUser = async (req:Request, res:any) => {
@@ -97,7 +99,7 @@ export const loginUser = async (req:Request, res:any) => {
     const { email, password } = req.body;
     const userData = await User.findOne({ email });
     console.log(userData);
-    if (!userData) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!userData) return res.status(400).json({ message: 'Имэйл болон нууц үгээ зөв оруулна уу.' });
     const user = {
       id : userData.id,
       email : userData.email,
@@ -109,19 +111,73 @@ export const loginUser = async (req:Request, res:any) => {
       createdAt: userData.createdAt,
       updatedAt: userData.updatedAt
      }
-    const isMatch = password === userData.password ? true : false
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials',
+    const isMatch = userData.comparePassword(password);
+    if (!isMatch) return res.status(400).json({ message: 'Имэйл болон нууц үгээ зөв оруулна уу.',
       body : req.body
      });
     
-    // const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
-    res.json(user);
+    const token = userData.getToken();
+    res.json({user, token});
   } catch (error) {
     res.status(500).json({ message: 'Server error has occured', body: req.body });
   }
 
 }
 
+export const forgotPassword = async (req : Request, res : any) =>{
+  if(!req.body.email){
+    return res.status(400).json({
+      message : "Нууц үг сэргээх имэйл оруулна уу"
+    })
+  }
+
+  const user = await User.findOne({email : req.body.email});
+
+  if(!user) {
+    return res.status(400).json({
+      message : "Хэрэглэгч олдсонгүй."
+    })
+  }
+
+  const resetToken = user.generateResetPasswordToken();
+  await user.save();
+
+  const link = `http://localhost:5173/reset-password?${resetToken}`
+
+  await sendEmail({
+    email: user.email,
+    subject : "Нууц үг өөрчлөх хүсэлт",
+    message : `Сайн байна уу.<br><br>Та нууц үгээ дараах линк дээр даран өөрчилнө үү: <a href="${link}" target="_blank">${link}</a><br><br>Өдрийг сайхан өнгөрүүлээрэй.`
+  });
+
+  return res.status(200).json({
+    token : resetToken,
+  })
+}
+
+export const resetPassword = async (req : Request, res : any) =>{
+  if(!req.body.resetToken || !req.body.password){
+    return res.status(400).json({
+      message : "Токен болон нууц үгээ дамжуулна уу."
+    })
+  }
+
+  const encryptedPassword = crypto.createHash("sha256").update(req.body.resetToken).digest("hex");
+  const user = await User.findOne({resetPasswordToken : encryptedPassword, resetPasswordExpire : {$gt: Date.now()}});
+
+  if(!user) {
+    return res.status(400).json({
+      message : "Хүчингүй токен."
+    })
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  user.save();
+
+  res.status(201).json({ message: "Амжилттaй шинэчлэгдлээ." });
+}
 
 
 export const completeExercise = async (req: Request, res: any) => {

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors"
 import dotenv from "dotenv";
+dotenv.config();
 import bodyParser from "body-parser"
 
 import userRoutes from "./routes/user";
@@ -9,11 +10,12 @@ import exerciseRoutes from "./routes/exercise";
 import questionRoutes from "./routes/question";
 import achievementRoutes from "@/routes/achievement";
 import connectDB from "./config/db";
+import { authenticateToken } from "./middleware/protect";
 // import lessonRoutes from "./routes/lessonRoutes";
 
 async function start(){
 
-  dotenv.config();
+
   const app = express();
 
   await connectDB();
@@ -26,7 +28,7 @@ async function start(){
   app.use("/api/achievements", achievementRoutes);
   app.use("/api/units", unitRoutes);
   app.use("/api/exercises", exerciseRoutes );
-  app.use("/api/questions", questionRoutes );
+  app.use("/api/questions", authenticateToken,questionRoutes );
   // app.use("/api/lessons", lessonRoutes);
 
   const PORT = process.env.PORT || 5000;

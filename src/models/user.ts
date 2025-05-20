@@ -1,5 +1,7 @@
-import { timeStamp } from "console";
 import mongoose, { Types } from "mongoose";
+import bcrypt from "bcrypt"
+import jwt from 'jsonwebtoken'
+import crypto from "crypto"
 
 type AnswerType = {
   type : mongoose.Types.ObjectId;
@@ -15,8 +17,14 @@ export interface UserDocument extends Document{
   experience: number;
   accuracy: number;
   exerciseLevel: number;
+  resetPasswordToken ?: string;
+  resetPasswordExpire ?: Date;
   createdAt : Date;
   updatedAt : Date;
+
+  comparePassword(candidatePassword: string): boolean;
+  getToken(): string;
+  generateResetPasswordToken() : string;
 }
 
 const answerSchema = new mongoose.Schema<AnswerType>({
@@ -27,11 +35,13 @@ const answerSchema = new mongoose.Schema<AnswerType>({
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, minLength : 8 },
   points: { type: Number, default: 0 },
   experience: { type: Number, default: 0 },
   accuracy : {type: Number, default: 0},
   exerciseLevel : {type : Number, default:1},  
+  resetPasswordToken : String,
+  resetPasswordExpire : Date,
 },{
   timestamps : true,
   toJSON: {
@@ -51,5 +61,32 @@ const userSchema = new mongoose.Schema({
       },
     },
 });
+
+userSchema.pre("save", async function (next){
+  if (!this.isModified('password')) return next();
+
+  const salt = await bcrypt.genSalt(10)
+  this.password = await bcrypt.hash(this.password, salt);
+})
+
+userSchema.methods.getToken = function (){
+  const token = jwt.sign({id : this._id}, process.env.JWT_SECRET!, {expiresIn: "30d"})
+  return token;
+}
+
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.generateResetPasswordToken = function (){
+  const resetToken = crypto.randomBytes(20).toString("hex")
+
+  this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest("hex");
+  this.resetPasswordExpire = Date.now() + 10*60*1000;
+
+  return resetToken;
+}
  
 export default mongoose.model<UserDocument>("User", userSchema);
